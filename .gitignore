@@ -1,0 +1,54 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+env/
+venv/
+ENV/
+.env
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Logs
+*.log
+*.out
+*.err
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+
+# Data and model directories
+data/
+models/
+
+# Docker related
+*.pid
+*.sock
+
+# Elasticsearch and Kafka data
+config/kafka/data/
+config/elasticsearch/
+
+# Node lock and state files
+node.lock
+_state/
+
+# Snapshots
+snapshot_cache/
+
+# Sensitive files
+config.yaml
