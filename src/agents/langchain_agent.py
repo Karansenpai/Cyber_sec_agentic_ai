@@ -13,7 +13,6 @@ from langchain_community.vectorstores import FAISS
 import os
 import google.generativeai as genai
 from typing import List, Optional, Any, Dict
-from pydantic import BaseModel, Field
 
 class GeminiEmbeddings(Embeddings):
     def __init__(self, api_key: str):
@@ -23,7 +22,7 @@ class GeminiEmbeddings(Embeddings):
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
         embeddings = []
         for text in texts:
-            model = genai.GenerativeModel('gemini-pro')
+            model = genai.GenerativeModel('gemini-2.0-flash')  # Updated to use gemini-2.0-flash
             response = model.generate_content(text)
             # Convert the response to a fixed-size embedding
             embedding = [hash(str(response.text)) % 1000 / 1000 for _ in range(512)]  # Normalize to [0,1]
@@ -34,10 +33,12 @@ class GeminiEmbeddings(Embeddings):
         return self.embed_documents([text])[0]
 
 class GeminiLLM(BaseLanguageModel):
-    def __init__(self, api_key: str, temperature: float = 0.7):
+    def __init__(self, api_key: str, temperature: float = 0.7, model_name: str = "gemini-2.0-flash"):  # Updated default model
+        super().__init__()
         self._api_key = api_key
         self._temperature = temperature
-        genai.configure(api_key=api_key)
+        self._model_name = model_name
+        genai.configure(api_key=self._api_key)
 
     @property
     def _llm_type(self) -> str:
@@ -49,12 +50,20 @@ class GeminiLLM(BaseLanguageModel):
         return self.predict(str(input))
 
     def predict(self, prompt: str) -> str:
-        model = genai.GenerativeModel('gemini-pro')
-        response = model.generate_content(prompt)
+        model = genai.GenerativeModel(self._model_name)
+        response = model.generate_content(prompt, generation_config=genai.types.GenerationConfig(temperature=self._temperature))
         return response.text
 
     def predict_messages(self, messages: List[str]) -> List[str]:
         return [self.predict(message) for message in messages]
+
+    def generate_prompt(self, prompt: str) -> str:
+        """Generate a completion for the given prompt."""
+        return self.predict(prompt)
+
+    async def agenerate_prompt(self, prompt: str) -> str:
+        """Asynchronously generate a completion for the given prompt."""
+        return self.generate_prompt(prompt)
 
     async def ainvoke(self, input: Any, config: Optional[Dict] = None, **kwargs: Any) -> Any:
         return self.invoke(input)
