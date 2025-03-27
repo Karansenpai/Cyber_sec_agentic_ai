@@ -1,0 +1,22 @@
+# Exclude unnecessary files and directories from the Docker build context
+# Large directories
+/data/
+/models/
+/doc/
+
+# Python cache files
+**/__pycache__/
+*.pyc
+*.pyo
+
+# Logs and lock files
+*.log
+*.lock
+
+# Other unnecessary files
+*.ndjson
+*.jpeg
+*.st
+*.si
+*.cfe
+*.cfs

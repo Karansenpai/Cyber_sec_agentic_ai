@@ -16,5 +16,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY src/ /app/src/
 COPY config/ /app/config/
 
+# Set environment variables
+ENV PYTHONPATH=/app
+
 # Run the dashboard service
 CMD ["python", "-u", "src/siem/dashboard_service.py"]

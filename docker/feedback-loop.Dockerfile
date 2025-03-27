@@ -16,6 +16,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY src/ /app/src/
 COPY config/ /app/config/
 
+# Set environment variables
+ENV PYTHONPATH=/app
+
 # Create directory for VectorDB
 RUN mkdir -p /app/data/vector_db
 RUN mkdir -p /app/data/models

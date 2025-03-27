@@ -115,6 +115,12 @@ services:
         condition: service_healthy
     networks:
       - cyber_net
+    healthcheck:
+      test: curl -s http://localhost:5601/api/status || exit 1
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
 
   # Data producer service - Simulates data sources
   data-producer:
@@ -236,7 +242,9 @@ services:
       elasticsearch:
         condition: service_healthy
       kibana:
-        condition: service_started
+        condition: service_healthy  # Changed to ensure Kibana is fully ready
+      kafka:
+        condition: service_healthy  # Added dependency on Kafka
     volumes:
       - ./src:/app/src
       - ./config:/app/config
