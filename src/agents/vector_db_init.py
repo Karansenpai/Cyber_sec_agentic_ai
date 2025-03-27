@@ -2,21 +2,37 @@
 Initialize VectorDB with Past Attack Cases
 This module loads historical attack cases into FAISS VectorDB for LangChain context.
 """
-import os
-import json
-from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import FAISS
 from langchain.docstore.document import Document
 from loguru import logger
+import os
+import google.generativeai as genai
 
-# Initial attack cases for context
+class GeminiEmbeddings:
+    def __init__(self, api_key):
+        self.api_key = api_key
+        genai.configure(api_key=api_key)
+        
+    def embed_documents(self, texts):
+        embeddings = []
+        for text in texts:
+            model = genai.GenerativeModel('gemini-pro')
+            response = model.generate_content(text)
+            # Convert the response to a fixed-size embedding
+            embedding = [hash(str(response.text)) % 1000 for _ in range(512)]
+            embeddings.append(embedding)
+        return embeddings
+    
+    def embed_query(self, text):
+        return self.embed_documents([text])[0]
+
+# Example attack cases for initialization
 INITIAL_CASES = [
     {
-        "alert": "Multiple failed SSH login attempts from IP 192.168.1.100",
-        "severity": "HIGH",
-        "action_taken": "block IP",
-        "outcome": "successful mitigation",
-        "context": "Brute force attack attempt detected"
+        "title": "Brute Force Login Attempt",
+        "description": "Multiple failed login attempts from single IP",
+        "severity": "Medium",
+        "mitigation": "Block IP and enforce 2FA"
     },
     {
         "alert": "Unusual data transfer to external IP 203.0.113.42",
@@ -53,7 +69,7 @@ def initialize_vector_db(vector_db_path="./data/vector_db"):
             documents.append(Document(page_content=text))
 
         # Initialize embeddings
-        embeddings = OpenAIEmbeddings()
+        embeddings = GeminiEmbeddings(api_key="AIzaSyCLGCT56ZbZ0Ww9J0Y__sBimQZ1msZkRzk")
 
         # Create and save the vector store
         vector_store = FAISS.from_documents(documents, embeddings)

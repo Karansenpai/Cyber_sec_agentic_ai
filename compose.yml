@@ -31,6 +31,7 @@ services:
         condition: service_healthy
     ports:
       - "9092:9092"
+      - "29092:29092"  # Added internal port
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -38,16 +39,18 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
     volumes:
       - ./data/kafka/data:/var/lib/kafka/data
     networks:
       - cyber_net
     healthcheck:
-      test: kafka-topics --bootstrap-server kafka:29092 --list || exit 1
-      interval: 10s
-      retries: 20
-      start_period: 10s
+      test: nc -z kafka 29092 || exit 1
+      interval: 30s
       timeout: 10s
+      retries: 3
+      start_period: 30s
       
   # Kafka UI - Web interface for Kafka management
   kafka-ui:
@@ -223,6 +226,7 @@ services:
         condition: service_started
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}  # Required for VectorDB embeddings
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}  # Required for Gemini embeddings
     volumes:
       - ./src:/app/src
       - ./config:/app/config

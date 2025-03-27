@@ -38,11 +38,10 @@ python-dateutil>=2.8.2
 requests>=2.27.1
 
 # Phase 3 Dependencies - LangChain & Response
-langchain>=0.0.267
-langchain-community>=0.0.1  # Added for vectorstores
-langchain-openai>=0.0.1  # Added for OpenAIEmbeddings
-openai>=0.28.0
+langchain>=0.1.0
+langchain-core>=0.1.0
+langchain-community>=0.1.0
 faiss-cpu>=1.7.4  # For vector similarity search
 paramiko>=3.3.1  # For SSH operations
-tiktoken>=0.5.1  # For OpenAI token counting
 tenacity>=8.2.3  # For retries in API calls
+google-generativeai>=0.3.0
