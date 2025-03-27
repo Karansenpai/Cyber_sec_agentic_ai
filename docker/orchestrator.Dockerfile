@@ -19,5 +19,8 @@ COPY config/ /app/config/
 # Create directory for VectorDB
 RUN mkdir -p /app/data/vector_db
 
+# Set Python path
+ENV PYTHONPATH="/app/src:${PYTHONPATH}"
+
 # Run the orchestration service
 CMD ["python", "-u", "src/agents/orchestrator_service.py"]

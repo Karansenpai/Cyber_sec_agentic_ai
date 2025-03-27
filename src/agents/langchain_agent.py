@@ -7,7 +7,7 @@ from langchain_core.tools import Tool
 from langchain_core.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from langchain.memory import ConversationBufferMemory
-from langchain.document_loaders import TextLoader
+from langchain_community.document_loaders import TextLoader
 from langchain_community.vectorstores import FAISS
 import os
 import google.generativeai as genai
@@ -33,63 +33,36 @@ class GeminiEmbeddings:
 
 class GeminiLLM(BaseLanguageModel):
     def __init__(self, api_key: str, temperature: float = 0.7):
+        super().__init__()  # Ensure proper initialization of the parent class
         self.api_key = api_key
         self.temperature = temperature
         genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel('gemini-pro')
-    
-    def predict(self, text: str) -> str:
-        response = self.model.generate_content(text)
-        return response.text
-
-    def generate(self, prompts: List[str], **kwargs) -> List[str]:
-        return [self.predict(prompt) for prompt in prompts]
-
-    @property
-    def _llm_type(self) -> str:
-        return "gemini"
 
 class LangChainAgent:
-    def __init__(self, vector_db_path):
-        """Initialize the LangChain agent with a VectorDB for past attack cases."""
-        self.vector_db_path = vector_db_path
-        self.memory = ConversationBufferMemory(memory_key="chat_history")
-        
-        # Initialize with Gemini
-        self.api_key = "AIzaSyCLGCT56ZbZ0Ww9J0Y__sBimQZ1msZkRzk"
-        self.llm = GeminiLLM(api_key=self.api_key)
-        self.embeddings = GeminiEmbeddings(api_key=self.api_key)
-        
-        try:
-            self.vector_db = FAISS.load_local(vector_db_path, self.embeddings)
-        except Exception as e:
-            print(f"Error loading vector DB: {e}")
-            # Initialize with empty DB if loading fails
-            self.vector_db = FAISS.from_texts(["Initial document"], self.embeddings)
-
-    def process_alert(self, alert):
-        """Process a threat alert and return a mitigation decision."""
-        prompt = PromptTemplate(
-            input_variables=["alert"],
-            template="""
-            You are a cybersecurity AI agent. Based on the following alert:
-            {alert}
-            Assess the severity and recommend the best mitigation action.
-            """
+    def __init__(self, vector_db_path: str):
+        """Initialize the LangChain agent with a vector database."""
+        self.vector_db = FAISS.load_local(
+            vector_db_path, 
+            GeminiEmbeddings(api_key=os.getenv("GENAI_API_KEY")),
+            allow_dangerous_deserialization=True  # Enable deserialization with caution
         )
-        
-        try:
-            response = self.llm.predict(prompt.format(alert=alert))
-            return response
-        except Exception as e:
-            print(f"Error processing alert: {e}")
-            return "Error processing alert. Please check the system logs."
+        self.llm = GeminiLLM(api_key=os.getenv("GENAI_API_KEY"))
+        self.memory = ConversationBufferMemory(memory_key="chat_history")
+        self.chain = LLMChain(
+            llm=self.llm,
+            prompt=PromptTemplate(
+                input_variables=["context", "query"],
+                template="""
+                Context: {context}
+                Query: {query}
+                Response:
+                """
+            ),
+            memory=self.memory
+        )
 
-if __name__ == "__main__":
-    # Example usage
-    vector_db_path = "./vector_db"
-    agent = LangChainAgent(vector_db_path)
-    # Example alert
-    alert = "Suspicious login attempt detected from IP 192.168.1.100."
-    decision = agent.process_alert(alert)
-    print("Decision:", decision)
+    def query(self, user_query: str) -> str:
+        """Query the LangChain agent and return a response."""
+        context = self.vector_db.similarity_search(user_query, k=3)
+        context_text = "\n".join([doc.page_content for doc in context])
+        return self.chain.run(context=context_text, query=user_query)
