@@ -1,47 +1,78 @@
 # Agentic AI-Driven Cybersecurity System
-
 A decentralized, Agentic AI-driven cybersecurity system that autonomously detects, analyzes, and mitigates cyber threats in real time—without requiring constant human intervention.
 
 ## Project Structure
-
 ```
 .
 ├── config/                # Configuration files
-│   └── config.yaml        # Main application configuration
+│   ├── config.yaml       # Main application configuration
+│   └── kibana_dashboards/ # Kibana visualization configs
 ├── data/                  # Data storage directory 
-├── docker/                # Dockerfiles for each service
+│   ├── elasticsearch/    # Elasticsearch data
+│   ├── kafka/           # Kafka data
+│   ├── models/          # Trained ML models
+│   ├── vector_db/       # FAISS vector database
+│   └── zookeeper/       # Zookeeper data
+├── docker/               # Dockerfiles for each service
+│   ├── anomaly-detection.Dockerfile
+│   ├── dashboard-service.Dockerfile
 │   ├── data-consumer.Dockerfile
 │   ├── data-producer.Dockerfile
-│   └── kafka-init.Dockerfile
-├── compose.yml            # Docker Compose configuration
-├── requirements.txt       # Python dependencies
-└── src/                   # Source code
-    ├── agents/            # LangChain AI agents (Phase 3)
-    ├── kafka/             # Kafka producers and consumers
-    │   ├── consumer.py    # Kafka consumer for processing data
-    │   ├── init_topics.py # Script to initialize Kafka topics
-    │   └── producer.py    # Kafka data producer/simulator
-    ├── models/            # ML models for anomaly detection (Phase 2)
-    ├── response/          # Autonomous response system (Phase 3)
-    ├── siem/              # SIEM integration
-    └── utils/             # Utility functions
-        └── config.py      # Configuration loading utilities
+│   ├── feedback-loop.Dockerfile
+│   ├── kafka-init.Dockerfile
+│   └── orchestrator.Dockerfile
+├── compose.yml          # Docker Compose configuration
+├── requirements.txt     # Python dependencies
+└── src/                # Source code
+    ├── agents/         # LangChain AI agents
+    │   ├── langchain_agent.py     # Core AI decision making
+    │   ├── orchestrator_service.py # Service orchestration
+    │   └── vector_db_init.py      # Vector DB setup
+    ├── kafka/          # Kafka producers and consumers
+    ├── models/         # ML models for anomaly detection
+    │   ├── anomaly_detection/     # Detection algorithms
+    │   ├── automl/              # AutoML pipeline
+    │   └── features/            # Feature engineering
+    ├── response/       # Autonomous response system
+    ├── siem/          # SIEM integration
+    └── utils/         # Utility functions
 ```
 
-## Phase 1: Infrastructure Setup & Data Ingestion
+## System Components
 
-This phase sets up the basic infrastructure for data ingestion:
+### Infrastructure Layer
+- **Kafka & Zookeeper**: Message broker cluster for real-time data streaming
+- **Elasticsearch**: Stores all security events and logs
+- **Kibana**: Security visualization and dashboards
+- **FAISS Vector DB**: Stores embeddings for AI context memory
 
-- Kafka cluster for streaming data
-- Elasticsearch for log storage
-- Data producers to simulate network logs, system alerts, and user events
-- Data consumers to process events and store them in Elasticsearch
-- Kibana for visualization
+### Data Processing Layer
+- **Data Producer**: Simulates security-related data sources
+- **Data Consumer**: Processes and stores events in Elasticsearch
+- **Dashboard Service**: Real-time security monitoring interface
+
+### AI Layer
+- **Anomaly Detection**: ML-based threat detection using TensorFlow
+- **LangChain Agent**: Autonomous decision-making using Gemini
+- **Feedback Loop**: Continuous model improvement system
+
+### Response Layer
+- **Orchestrator**: Coordinates automated response actions
+- **Incident Responder**: Executes mitigation steps
+- **Event Correlator**: Analyzes event relationships
+
+## Features
+- Real-time threat detection using ML/AI
+- Autonomous decision-making with LangChain
+- Automated incident response
+- Self-improving models via feedback loops
+- Comprehensive security dashboards
+- Vector-based threat pattern matching
 
 ## Prerequisites
-
-- Docker
-- Docker Compose
+- Docker and Docker Compose
+- Google API Key (for Gemini LLM)
+- 8GB+ RAM recommended
 
 ## Getting Started
 
@@ -51,53 +82,7 @@ This phase sets up the basic infrastructure for data ingestion:
    cd Project_6th_sem
    ```
 
-2. Start the system using Docker Compose:
+2. Set up environment variables:
    ```
-   docker compose up -d
+   export GOOGLE_API_KEY=your_api_key
    ```
-
-3. Monitor the logs:
-   ```
-   docker compose logs -f
-   ```
-
-4. Access the services:
-   - Kafka UI: http://localhost:8080
-   - Elasticsearch: http://localhost:9200
-   - Kibana: http://localhost:5601
-
-## System Components
-
-### Kafka
-- Message broker for real-time data streaming
-- Topics:
-  - `network_logs`: Network traffic and connection logs
-  - `system_alerts`: System-generated security alerts
-  - `user_events`: User activity events
-
-### Elasticsearch
-- Stores all log data and events
-- Used for searching and analyzing security events
-
-### Data Producer
-- Simulates security-related data sources
-- Generates synthetic network logs, system alerts, and user events
-
-### Data Consumer
-- Processes messages from Kafka topics
-- Stores data in appropriate Elasticsearch indices
-- Sets up index mappings for optimized search
-
-## Configuration
-
-The main configuration file is located at `config/config.yaml`. You can modify:
-
-- Kafka settings (brokers, topics)
-- Elasticsearch settings (hosts, indices)
-- Simulation parameters (event generation rates)
-
-## Next Steps
-
-- **Phase 2**: Implement AI-powered threat detection and anomaly detection models
-- **Phase 3**: Deploy LangChain AI for autonomous decision-making and response
-- **Phase 4**: Establish continuous learning and feedback loops for the AI models
