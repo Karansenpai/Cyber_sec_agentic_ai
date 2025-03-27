@@ -203,6 +203,7 @@ services:
         condition: service_started
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}  # Required for LangChain
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}  # Required for Gemini LLM and embeddings
     volumes:
       - ./src:/app/src
       - ./config:/app/config
